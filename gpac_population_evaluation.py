@@ -15,20 +15,15 @@ def base_population_evaluation(population, parsimony_coefficient, experiment, **
             controller = individual.genes if getattr(individual, 'genes', None) is not None else individual
             # Each evaluation calls play_GPac with the resolved controller, returning both the numeric score and the detailed game log. Passing along **kwargs forwards the configuration parameters such as map and random seeds, preserving the caller's experimental setup.
             score, log = play_GPac(controller, **kwargs)
-            # The raw game score becomes the base_fitness because Assignment 2b requires that evolutionary comparisons rely on unpenalized performance.
-            # Storing it explicitly allows later analysis to distinguish between true performance and parsimony-adjusted fitness values.
+            # The raw game score becomes the base_fitness because Assignment 2b requires that evolutionary comparisons rely on unpenalized performance. Storing it explicitly allows later analysis to distinguish between true performance and parsimony-adjusted fitness values.
             individual.base_fitness = score
-            # Tree size is measured using the node count so that the parsimony penalty reflects the overall complexity of the evolved program.
-            # We guard against missing genes by treating unevaluated individuals as having zero nodes, which prevents crashes during debugging.
+            # Tree size is measured using the node count so that the parsimony objective reflects the overall complexity of the evolved program. We guard against missing genes by treating unevaluated individuals as having zero nodes, which prevents crashes during debugging.
             size = individual.genes.node_count() if getattr(individual, 'genes', None) else 0
-            # The parsimony penalty multiplies the node count by the configured coefficient, yielding the scalar amount to subtract from the base fitness.
-            # Keeping this calculation separate improves readability and simplifies debugging when tuning the coefficient.
-            penalty = parsimony_coefficient * size
-            # Penalized fitness subtracts the parsimony penalty from the base score so that selection pressure discourages unnecessary bloat.
-            # Assigning the result to the fitness attribute makes the value available to selection operators exactly as in Assignment Series 1.
-            individual.fitness = score - penalty
-            # We store the game log on the individual so that the highest-performing solutions retain their match history for later analysis and reporting.
-            # Retaining the log here also allows the memory-pruning logic after the conditional block to discard unneeded logs safely.
+            # Multiobjective optimization tracks the original fitness separately from complexity so we intentionally retain the raw score as the single-objective fitness used by legacy utilities. This choice keeps existing selection operators functional while the objectives list carries the richer multiobjective data.
+            individual.fitness = score
+            # Each individual records the objectives tuple with the first entry counting nodes to be minimized and the second entry recording the score to be maximized. Storing the pair avoids collapsing the objectives into a single penalty value, which supports Pareto-based survival in later pipeline stages.
+            individual.objectives = (size, score)
+            # We store the game log on the individual so that the highest-performing solutions retain their match history for later analysis and reporting. Retaining the log here also allows the memory-pruning logic after the conditional block to discard unneeded logs safely.
             individual.log = log
         # After evaluating every individual we leave the remaining code to prune excess logs, matching the memory-saving behavior described in the notebook.
         # No additional handling is required here because the shared logic below automatically removes logs from non-elite individuals.
