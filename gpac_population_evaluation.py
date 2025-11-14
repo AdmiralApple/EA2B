@@ -11,9 +11,10 @@ def base_population_evaluation(population, parsimony_coefficient, experiment, **
         # We iterate through every individual so that each controller receives a fitness evaluation before selection and survival decisions are made.
         # Evaluating sequentially keeps the logic clear and ensures that per-individual bookkeeping occurs alongside the game simulation.
         for individual in population:
-            # Each evaluation calls play_GPac with the individual as the Pac-Man controller, returning both the numeric score and the detailed game log.
-            # Passing along **kwargs forwards the configuration parameters such as map and random seeds, preserving the caller's experimental setup.
-            score, log = play_GPac(individual, **kwargs)
+            # We select the object to hand to play_GPac by preferring the individual's parse tree when it exists, which guarantees that the game receives an actual controller rather than a placeholder. Falling back to the individual itself keeps compatibility with helper code that expects TreeGenotype to act as the controller wrapper.
+            controller = individual.genes if getattr(individual, 'genes', None) is not None else individual
+            # Each evaluation calls play_GPac with the resolved controller, returning both the numeric score and the detailed game log. Passing along **kwargs forwards the configuration parameters such as map and random seeds, preserving the caller's experimental setup.
+            score, log = play_GPac(controller, **kwargs)
             # The raw game score becomes the base_fitness because Assignment 2b requires that evolutionary comparisons rely on unpenalized performance.
             # Storing it explicitly allows later analysis to distinguish between true performance and parsimony-adjusted fitness values.
             individual.base_fitness = score
