@@ -8,41 +8,65 @@ from fitness import *
 #          member variables as described in the Assignment 2b notebook.
 def base_population_evaluation(population, parsimony_coefficient, experiment, **kwargs):
     if experiment.casefold() == 'green':
-        # Evaluate a population of Pac-Man controllers against the default ghost agent.
-        # Sample call: score, log = play_GPac(controller, **kwargs)
-        pass
+        # We iterate through every individual so that each controller receives a fitness evaluation before selection and survival decisions are made.
+        # Evaluating sequentially keeps the logic clear and ensures that per-individual bookkeeping occurs alongside the game simulation.
+        for individual in population:
+            # Each evaluation calls play_GPac with the individual as the Pac-Man controller, returning both the numeric score and the detailed game log.
+            # Passing along **kwargs forwards the configuration parameters such as map and random seeds, preserving the caller's experimental setup.
+            score, log = play_GPac(individual, **kwargs)
+            # The raw game score becomes the base_fitness because Assignment 2b requires that evolutionary comparisons rely on unpenalized performance.
+            # Storing it explicitly allows later analysis to distinguish between true performance and parsimony-adjusted fitness values.
+            individual.base_fitness = score
+            # Tree size is measured using the node count so that the parsimony penalty reflects the overall complexity of the evolved program.
+            # We guard against missing genes by treating unevaluated individuals as having zero nodes, which prevents crashes during debugging.
+            size = individual.genes.node_count() if getattr(individual, 'genes', None) else 0
+            # The parsimony penalty multiplies the node count by the configured coefficient, yielding the scalar amount to subtract from the base fitness.
+            # Keeping this calculation separate improves readability and simplifies debugging when tuning the coefficient.
+            penalty = parsimony_coefficient * size
+            # Penalized fitness subtracts the parsimony penalty from the base score so that selection pressure discourages unnecessary bloat.
+            # Assigning the result to the fitness attribute makes the value available to selection operators exactly as in Assignment Series 1.
+            individual.fitness = score - penalty
+            # We store the game log on the individual so that the highest-performing solutions retain their match history for later analysis and reporting.
+            # Retaining the log here also allows the memory-pruning logic after the conditional block to discard unneeded logs safely.
+            individual.log = log
+        # After evaluating every individual we leave the remaining code to prune excess logs, matching the memory-saving behavior described in the notebook.
+        # No additional handling is required here because the shared logic below automatically removes logs from non-elite individuals.
 
     elif experiment.casefold() == 'yellow':
         # YELLOW: Evaluate a population of Pac-Man controllers against the default ghost agent.
         # Apply parsimony pressure as a second objective to be minimized, rather than a penalty.
         # Sample call: score, log = play_GPac(controller, **kwargs)
-        pass
+        raise NotImplementedError('YELLOW experiment evaluation is not implemented in this helper')
 
     elif experiment.casefold() == 'red1':
         # RED1: Evaluate a population of Pac-Man controllers against the default ghost agent.
         # Use the score vectors to calculate fitness sharing.
         # Sample call: score, log, score_vector = play_GPac(controller, score_vector=True, **kwargs)
-        pass
+        raise NotImplementedError('RED1 experiment evaluation is not implemented in this helper')
 
     elif experiment.casefold() == 'red2':
         # RED2: Evaluate a population of Pac-Man controllers against the default ghost agent.
         # Sample call: score, log = play_GPac(controller, **kwargs)
-        pass
+        raise NotImplementedError('RED2 experiment evaluation is not implemented in this helper')
 
     elif experiment.casefold() == 'red3':
         # RED3: Evaluate a population where each game has multiple different Pac-Man controllers.
         # You must write your own play_GPac_multicontroller function, and use that.
-        pass
+        raise NotImplementedError('RED3 experiment evaluation is not implemented in this helper')
 
     elif experiment.casefold() == 'red4':
         # RED4: Evaluate a population of ghost controllers against the default Pac-Man agent.
         # Sample call: score, log = play_GPac(None, controller, **kwargs)
-        pass
+        raise NotImplementedError('RED4 experiment evaluation is not implemented in this helper')
 
     elif experiment.casefold() == 'red5':
         # RED5: Evaluate a population where each game has multiple different ghost controllers.
         # You must write your own play_GPac_multicontroller function, and use that.
-        pass
+        raise NotImplementedError('RED5 experiment evaluation is not implemented in this helper')
+    else:
+        # Experiments outside the implemented set raise an error so that calling code knows additional logic is required for that configuration.
+        # Raising NotImplementedError makes the limitation explicit and avoids silent failures that could compromise experimental results.
+        raise NotImplementedError(f'Experiment type {experiment} is not implemented in base_population_evaluation')
 
 
     # This code will strip out unnecessary log member variables, to save your memory.
