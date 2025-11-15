@@ -5,16 +5,15 @@ import statistics
 import random
 
 
+#calculates domination
 def dominates(candidate, challenger):
-    # This helper decides whether the candidate dominates the challenger by checking both objectives with their respective optimization directions. The first objective minimizes node count, so domination requires the candidate to use no more nodes and to be strictly better in at least one objective, while the second objective maximizes score and therefore favors higher values.
+    
     candidate_nodes, candidate_score = candidate.objectives
-    # Splitting the objectives into named variables clarifies which comparison applies to each value and keeps the logic easy to audit. Naming the tuple entries also aids debugging because breakpoint inspections now read more clearly.
     challenger_nodes, challenger_score = challenger.objectives
-    # We assert that domination for the minimizing dimension requires no more nodes than the challenger, ensuring the Pareto relation respects the parsimony goal. The maximizing dimension requires at least as much score to avoid discarding high-performing controllers in error.
+
     no_worse = candidate_nodes <= challenger_nodes and candidate_score >= challenger_score
-    # Strict improvement in either objective is mandatory so that identical solutions do not incorrectly dominate each other, which preserves diversity on the Pareto front. Checking both dimensions maintains correctness even if future objectives are added to the tuple.
     strictly_better = candidate_nodes < challenger_nodes or candidate_score > challenger_score
-    # Returning the combined domination flag keeps the rest of the algorithm tidy because callers simply ask whether one individual dominates another. The two-step structure improves readability compared to condensing everything into a single expression.
+    
     return no_worse and strictly_better
 
 
