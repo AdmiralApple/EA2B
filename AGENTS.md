@@ -4,6 +4,7 @@
 ## Language & Style
 - Use Python
 - do NOT add test cases, or test of edge cases.
+- make code naive
 
 
 ## Agent Behavior
