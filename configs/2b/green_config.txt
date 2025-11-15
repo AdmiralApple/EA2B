@@ -1,16 +1,16 @@
 [ea]
-mu = 9_500
-num_children = 250
-mutation_rate = 0.000000001
+mu = 100
+num_children = 100
+mutation_rate = 0.3
 parent_selection = k_tournament_with_replacement
 survival_selection = k_tournament_without_replacement
 individual_class = TreeGenotype
 
 [parent_selection_kwargs]
-k = 1
+k = 5
 
 [survival_selection_kwargs]
-k = 1
+k = 2
 
 [fitness_kwargs]
 parsimony_coefficient = 500
